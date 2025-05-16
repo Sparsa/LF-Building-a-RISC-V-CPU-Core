@@ -53,6 +53,26 @@
    $is_s_instr = $instr[6:2] ==? 5'b0100x;
    $is_j_instr = $instr[6:2] == 5'b11011;
    $is_b_instr = $instr[6:2] == 5'b11000;
+   $opcode[6:0] = $instr[6:0]; 
+   //The valid signals, when the correspoinding signals should be selected.
+   // rs1_valid works for both rs1 and funct3 validity
+   $rs1_valid = $is_r_instr|| $is_i_instr || $is_s_instr || $is_b_instr;
+   $rs2_valid = $is_r_instr ||  $is_s_instr || $is_b_instr;
+   $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+   $imm_valid = $is_i_instr || $is_b_instr || $is_u_instr || $is_j_instr;
+   `BOGUS_USE($rd $rd_valid $rs1 $rs1_valid $rs2 $rs2_valid $imm $imm_valid); 
+   // Now you have to assign the values based on their validity.
+   $funct3[0:2] =  $instr[14:12] ;
+   $rs1[4:0] =  $instr[19:15] ;
+   $rs2[4:0] =  $instr[24:20] ;
+   $rd[4:0] =  $instr[11:7] ;
+   // the immidiate values are not easy, so we have to compile it for every different instructions
+   $imm[31:0] = $is_i_instr ? { {21{$instr[31]}} ,$instr[30:20]}: 
+                $is_s_instr ? { {21{$instr[31]}}, $instr[31:25],$instr[11:7]} : 
+                $is_b_instr ? { {20{$instr[31]}}, $instr[31], $instr[7], $instr[30:25],$instr[11:8]} :
+                $is_u_instr ? { {10{$instr[31]}}, $instr[31:12]} :
+                $is_j_instr ? { {10{$instr[31]}}, $instr[31], $instr[19:12], $instr[20],$instr[30:21]} : 
+                32'b0;
    // YOUR CODE HERE
    // ...
 
