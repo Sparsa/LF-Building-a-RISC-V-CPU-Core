@@ -1,7 +1,7 @@
 \m4_TLV_version 1d: tl-x.org
 \SV
    // This code can be found in: https://github.com/stevehoover/LF-Building-a-RISC-V-CPU-Core/risc-v_shell.tlv
-   
+
    m4_include_lib(['https://raw.githubusercontent.com/stevehoover/LF-Building-a-RISC-V-CPU-Core/main/lib/risc-v_shell_lib.tlv'])
 
 
@@ -18,7 +18,7 @@
    //  x12 (a2): 10
    //  x13 (a3): 1..10
    //  x14 (a4): Sum
-   // 
+   //
    m4_asm(ADDI, x14, x0, 0)             // Initialize sum register a4 with 0
    m4_asm(ADDI, x12, x0, 1010)          // Store count of 10 in register a2.
    m4_asm(ADDI, x13, x0, 1)             // Initialize loop count register a3 with 0
@@ -39,18 +39,28 @@
    m4_makerchip_module   // (Expanded in Nav-TLV pane.)
    /* verilator lint_on WIDTH */
 \TLV
-   
+
    $reset = *reset;
-   
-   
+   $pc[31:0] = >>1$next_pc[31:0];
+   $next_pc[31:0] = $reset? 0 : $pc[31:0] + 4;
+   `READONLY_MEM($pc, $$instr[31:0]);
+   $is_u_instr = $instr[6:2] == 5'b00101 || $instr[6:2] == 5'b01101;
+   // $is_u_istr = $instr[6:2] ==? 5'b0x101; // the x here represents don't care bit
+   $is_i_instr = $instr[6:5] == 2'b00 ? $instr[4:2] ==? 3'b00x || $instr[4:2] ==? 3'b1x0 :
+                 $instr[6:5] == 2'b11 ? $instr[4:2] == 3'b001 : 1'b0;
+   $is_r_instr = $instr[6:5] == 2'b01 ? $instr[4:2] == 3'b011 || $instr[4:2] == 3'b100 || $instr[4:2] == 3'b110 :
+                 $instr[6:5] == 2'b10 ? $instr[4:2] == 3'b100 : 1'b0;
+   $is_s_instr = $instr[6:2] ==? 5'b0100x;
+   $is_j_instr = $instr[6:2] == 5'b11011;
+   $is_b_instr = $instr[6:2] == 5'b11000;
    // YOUR CODE HERE
    // ...
-   
-   
+
+
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = 1'b0;
    *failed = *cyc_cnt > M4_MAX_CYC;
-   
+
    //m4+rf(32, 32, $reset, $wr_en, $wr_index[4:0], $wr_data[31:0], $rd_en1, $rd_index1[4:0], $rd_data1, $rd_en2, $rd_index2[4:0], $rd_data2)
    //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
    m4+cpu_viz()
