@@ -43,7 +43,7 @@
 
    $reset = *reset;
    $pc[31:0] = >>1$next_pc[31:0];
-   $next_pc[31:0] = $reset? 0 : $pc[31:0] + 4;
+   $next_pc[31:0] = $reset? 0 : $taken_br ? $br_tgt_pc : $pc[31:0] + 4;
    `READONLY_MEM($pc, $$instr[31:0]);
    $is_u_instr = $instr[6:2] == 5'b00101 || $instr[6:2] == 5'b01101;
    // $is_u_istr = $instr[6:2] ==? 5'b0x101; // the x here represents don't care bit
@@ -69,10 +69,10 @@
    $rd[4:0] =  $instr[11:7] ;
    // the immidiate values are not easy, so we have to compile it for every different instructions
    $imm[31:0] = $is_i_instr ? { {21{$instr[31]}} ,$instr[30:20]}: 
-                $is_s_instr ? { {21{$instr[31]}}, $instr[31:25],$instr[11:7]} : 
-                $is_b_instr ? { {20{$instr[31]}}, $instr[31], $instr[7], $instr[30:25],$instr[11:8]} :
-                $is_u_instr ? { {10{$instr[31]}}, $instr[31:12]} :
-                $is_j_instr ? { {10{$instr[31]}}, $instr[31], $instr[19:12], $instr[20],$instr[30:21]} : 
+                $is_s_instr ? { {20{$instr[31]}}, $instr[31:25],$instr[11:7]} : 
+                $is_b_instr ? { {20{$instr[31]}}, $instr[7], $instr[30:25],$instr[11:8],1'b0} :
+                $is_u_instr ? { {12{$instr[31]}}, $instr[31:12]} :
+                $is_j_instr ? { {11{$instr[31]}}, $instr[31], $instr[19:12], $instr[20],$instr[30:21],1'b0} : 
                 32'b0;
                 
    // Instruction decode
@@ -94,17 +94,21 @@
                    
    $taken_br = $is_beq ? $src1_value == $src2_value :
                $is_bne ? $src1_value != $src2_value :
-               $is_blt ? $src1_value < $src2_value && ($src1_value[31] != $src2_value[31]) :
-               $is_bge ? $src1_value >= $src2_value && ($src1_value[31] != $src2_value[31]):
+               $is_blt ? $src1_value < $src2_value || ($src1_value[31] != $src2_value[31]) :
+               $is_bge ? $src1_value >= $src2_value || ($src1_value[31] != $src2_value[31]):
                $is_bltu ? $src1_value < $src2_value :
                $is_bgeu ? $src1_value >= $src2_value :
                1'b0;
+   $br_tgt_pc[31:0] = $pc + $imm;
+   
+   
    // YOUR CODE HERE
    // ...
 
 
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = 1'b0;
+   //*passed = 1'b0;
+   m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
 
    m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $result[31:0], $rs1_valid, $rs1[4:0], $src1_value[31:0], $rs2_valid, $rs2[4:0], $src2_value[31:0])
