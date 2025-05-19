@@ -126,7 +126,7 @@
    
    $jalr_tgt_pc[31:0] = $src1_value + $imm;
    
-   $result[31:0] = $is_addi? $src1_value + $imm :
+   $result[31:0] = $is_addi || $is_load || $is_s_instr ? $src1_value + $imm :
                    $is_add ? $src1_value + $src2_value : 
                    $is_andi ? $src1_value & $imm :
                    $is_ori ? $src1_value | $imm :
@@ -174,9 +174,9 @@
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
 
-   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $result[31:0], $rs1_valid, $rs1[4:0], $src1_value[31:0], $rs2_valid, $rs2[4:0], $src2_value[31:0])
+   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $is_load? $ld_data : $result[31:0], $rs1_valid, $rs1[4:0], $src1_value[31:0], $rs2_valid, $rs2[4:0], $src2_value[31:0])
    //m4+rf(32, 32, $reset, $wr_en, $wr_index[4:0], $wr_data[31:0], $rd_en1, $rd_index1[4:0], $rd_data1, $rd_en2, $rd_index2[4:0], $rd_data2)
-
+   m4+dmem(32, 32, $reset, $result[6:2], $is_s_instr, $src2_value, $is_load, $ld_data)
    //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
    m4+cpu_viz()
 \SV
