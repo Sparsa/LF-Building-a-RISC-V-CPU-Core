@@ -43,7 +43,7 @@
 
    $reset = *reset;
    $pc[31:0] = >>1$next_pc[31:0];
-   $next_pc[31:0] = $reset? 0 : $taken_br ? $br_tgt_pc : $pc[31:0] + 4;
+   $next_pc[31:0] = $reset? 0 : $taken_br || $is_jal ? $br_tgt_pc : $is_jalr ? $jalr_tgt_pc : $pc[31:0] + 4;
    `READONLY_MEM($pc, $$instr[31:0]);
    $is_u_instr = $instr[6:2] == 5'b00101 || $instr[6:2] == 5'b01101;
    // $is_u_istr = $instr[6:2] ==? 5'b0x101; // the x here represents don't care bit
@@ -124,6 +124,7 @@
    $sra_rslt[63:0] = $sext_src1 >> $src2_value[4:0];
    $srai_rslt[63:0] = $sext_src1 >> $imm[4:0];
    
+   $jalr_tgt_pc[31:0] = $src1_value + $imm;
    
    $result[31:0] = $is_addi? $src1_value + $imm :
                    $is_add ? $src1_value + $src2_value : 
