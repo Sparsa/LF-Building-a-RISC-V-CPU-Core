@@ -54,7 +54,7 @@
    $is_s_instr = $instr[6:2] ==? 5'b0100x;
    $is_j_instr = $instr[6:2] == 5'b11011;
    $is_b_instr = $instr[6:2] == 5'b11000;
-   $is_load = $instr ==? 11'bx_xxx_0000011;
+   $is_load = $instr[6:2] ==? 5'b00000;
    $opcode[6:0] = $instr[6:0]; 
    //The valid signals, when the correspoinding signals should be selected.
    // rs1_valid works for both rs1 and funct3 validity
@@ -153,6 +153,7 @@
                                     {31'b0, $src1_value[31]}) :
                    $is_sra ? $sra_rslt[31:0] :
                    $is_srai ? $srai_rslt[31:0] :
+               
                    32'b0;
                    
    $taken_br = $is_beq ? $src1_value == $src2_value :
@@ -174,7 +175,7 @@
    m4+tb()
    *failed = *cyc_cnt > M4_MAX_CYC;
 
-   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $is_load? $ld_data : $result[31:0], $rs1_valid, $rs1[4:0], $src1_value[31:0], $rs2_valid, $rs2[4:0], $src2_value[31:0])
+   m4+rf(32, 32, $reset, $rd_valid, $rd[4:0],  $is_load? $ld_data : $result[31:0], $rs1_valid, $rs1[4:0], $src1_value[31:0], $rs2_valid, $rs2[4:0], $src2_value[31:0])
    //m4+rf(32, 32, $reset, $wr_en, $wr_index[4:0], $wr_data[31:0], $rd_en1, $rd_index1[4:0], $rd_data1, $rd_en2, $rd_index2[4:0], $rd_data2)
    m4+dmem(32, 32, $reset, $result[6:2], $is_s_instr, $src2_value, $is_load, $ld_data)
    //m4+dmem(32, 32, $reset, $addr[4:0], $wr_en, $wr_data[31:0], $rd_en, $rd_data)
